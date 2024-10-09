@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des sociétés{% endblock %}
+
+{% block body %}
+<h1>Mes Sociétés</h1>
+
+<ul>
+    {% for company in companies %}
+        <li>
+            <a href="{{ path('company_details', {'id': company.id}) }}">
+                {{ company.name }} (SIRET: {{ company.siret }})
+            </a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

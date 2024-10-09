@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1>Ajouter une nouvelle société</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.name) }}
+    {{ form_row(form.siret) }}
+    {{ form_row(form.address) }}
+    <button class="btn">Enregistrer</button>
+{{ form_end(form) }}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Projets de la société {{ company.name }}</h1>
+
+    <ul>
+        {% for project in projects %}
+            <li><a href="{{ path('project_details', {'companyId': company.id, 'projectId': project.id}) }}">{{ project.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

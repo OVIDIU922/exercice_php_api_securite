@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la société{% endblock %}
+
+{% block body %}
+<h1>Détails de la Société</h1>
+<ul>
+    <li>Nom : {{ company.name }}</li>
+    <li>SIRET : {{ company.siret }}</li>
+    <li>Adresse : {{ company.address }}</li>
+</ul>
+<a href="{{ path('company_list') }}">Retour à la liste</a>
+{% endblock %}
+
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la société{% endblock %}
+
+{% block body %}
+<h1>Nom : {{ company.name }}</h1>
+<p>SIRET: {{ company.siret }}</p>
+<p>Adresse: {{ company.address }}</p>
+
+<h2>Projets associés</h2>
+<ul>
+    {% for project in company.projects %}
+        <li>{{ project.title }} - Créé le {{ project.creationAt|date('d/m/Y') }}</li>
+    {% endfor %}
+</ul>
+
+<a href="{{ path('user_companies') }}">Retour à la liste des sociétés</a>
+{% endblock %}

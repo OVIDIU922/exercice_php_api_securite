@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1>Modifier la société</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.name) }}
+    {{ form_row(form.siret) }}
+    {{ form_row(form.address) }}
+    <button class="btn">Mettre à jour</button>
+{{ form_end(form) }}
+{% endblock %}

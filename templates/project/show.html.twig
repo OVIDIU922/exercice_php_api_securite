@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>{{ project.title }}</h1>
+    <p>{{ project.description }}</p>
+    <p>Créé le : {{ project.createdAt|date('d/m/Y') }}</p>
+
+    <a href="{{ path('edit_project', {'companyId': project.company.id, 'projectId': project.id}) }}">Modifier</a>
+    <form action="{{ path('delete_project', {'companyId': project.company.id, 'projectId': project.id}) }}" method="post">
+        <button type="submit">Supprimer</button>
+    </form>
+{% endblock %}

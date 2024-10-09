@@ -7,3 +7,45 @@ controllers:
 auth:
     path: /api/auth
     methods: ['POST']
+
+# Route pour afficher la liste des sociétés auxquelles appartient l'utilisateur
+user_companies:
+    path: /companies
+    controller: App\Controller\CompanyController::getUserCompanies
+    methods: [GET]
+
+# Route pour afficher les détails d'une société
+company_details:
+    path: /company/{id}
+    controller: App\Controller\CompanyController::getCompanyDetails
+    methods: [GET]
+
+# Route pour créer un projet
+create_project:
+    path: /company/{companyId}/project/new
+    controller: App\Controller\ProjectController::createProject
+    methods: [GET, POST]
+
+# Route pour afficher les projets d'une société
+company_projects:
+    path: /company/{companyId}/projects
+    controller: App\Controller\ProjectController::listProjects
+    methods: [GET]
+
+# Route pour afficher les détails d'un projet spécifique
+project_details:
+    path: /company/{companyId}/project/{projectId}
+    controller: App\Controller\ProjectController::showProject
+    methods: [GET]
+
+# Route pour modifier un projet
+edit_project:
+    path: /company/{companyId}/project/{projectId}/edit
+    controller: App\Controller\ProjectController::editProject
+    methods: [GET, POST]
+
+# Route pour supprimer un projet
+delete_project:
+    path: /company/{companyId}/project/{projectId}/delete
+    controller: App\Controller\ProjectController::deleteProject
+    methods: [POST]
