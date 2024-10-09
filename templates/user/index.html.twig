@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des rôles{% endblock %}
+
+{% block body %}
+<h1>Liste des utilisateurs et leurs rôles</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Rôles</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.email }}</td>
+            <td>
+                {% for role in user.roles %}
+                    <span>{{ role }}</span>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+            <td>
+                <a href="{{ path('user_add_role', {id: user.id}) }}" class="btn btn-primary">Ajouter un rôle</a>
+                <a href="{{ path('user_remove_role', {id: user.id}) }}" class="btn btn-danger">Retirer un rôle</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

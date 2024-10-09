@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 
@@ -19,13 +20,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
+    
+    #[Assert\Email(message: 'Veuillez entrer un email valide.')]
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
     #[ORM\Column]
     private array $roles = [];
 
+    #[Assert\Length(min: 5, minMessage: 'Le mot de passe doit faire au moins {{ limit }} caractères.')]
     #[ORM\Column]
     private ?string $password = null;
 
