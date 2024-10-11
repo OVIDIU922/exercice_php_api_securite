@@ -1,11 +1,38 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
-    <h1>Projets de la société {{ company.name }}</h1>
+{% block title %}Projets de {{ company.name }}{% endblock %}
 
-    <ul>
-        {% for project in projects %}
-            <li><a href="{{ path('project_details', {'companyId': company.id, 'projectId': project.id}) }}">{{ project.title }}</a></li>
-        {% endfor %}
-    </ul>
+{% block body %}
+    <h1>Projets de {{ company.name }}</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+                <tr>
+                    <td>{{ project.title }}</td>
+                    <td>{{ project.description }}</td>
+                    <td>
+                        <a href="{{ path('project_details', {companyId: company.id, projectId: project.id}) }}">Voir</a>
+                        <a href="{{ path('edit_project', {companyId: company.id, projectId: project.id}) }}">Éditer</a>
+                        <form method="post" action="{{ path('delete_project', {companyId: company.id, projectId: project.id}) }}" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3">Aucun projet trouvé.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('create_project', {companyId: company.id}) }}">Créer un nouveau projet</a>
 {% endblock %}

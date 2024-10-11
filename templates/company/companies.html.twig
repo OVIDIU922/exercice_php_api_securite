@@ -1,17 +1,41 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste des sociétés{% endblock %}
+{% block title %}Liste des entreprises{% endblock %}
 
 {% block body %}
-<h1>Mes Sociétés</h1>
-
-<ul>
-    {% for company in companies %}
-        <li>
-            <a href="{{ path('company_details', {'id': company.id}) }}">
-                {{ company.name }} (SIRET: {{ company.siret }})
-            </a>
-        </li>
-    {% endfor %}
-</ul>
+    <h1>Mes entreprises</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Siret</th>
+                <th>Adresse</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in companies %}
+                <tr>
+                    <td>{{ company.name }}</td>
+                    <td>{{ company.siret }}</td>
+                    <td>{{ company.address }}</td>
+                    <td>
+                        <a href="{{ path('company_details', {id: company.id}) }}">Voir</a>
+                        <a href="{{ path('company_edit', {id: company.id}) }}">Éditer</a>
+                        <form method="post" action="{{ path('delete_company', {id: company.id}) }}" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?');">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Aucune entreprise trouvée.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <a href="{{ path('company_new') }}">Ajouter une nouvelle entreprise</a>
 {% endblock %}
+

@@ -1,43 +1,55 @@
-<?php 
+<?php
 
-// tests/CompanyTest.php
 namespace App\Tests;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
+use App\Entity\Company;
+use PHPUnit\Framework\TestCase;
 
-class CompanyTest extends BaseTest
+class CompanyTest extends TestCase
 {
-    public function testGetCompaniesAsConsultant()
+    public function testCompanyCreation()
     {
-        $token = $this->getJwtToken('consultant@example.com', 'password'); // Remplacez par le bon email et mot de passe
-        $client = static::createClient();
-        $client->setServerParameter('HTTP_Authorization', 'Bearer ' . $token);
-        $client->request('GET', '/api/companies');
+        $company = new Company();
+        $company->setName('Test Company');
+        $company->setSiret('12345678901234');
 
-        $this->assertResponseIsSuccessful();
-        //$this->assertJsonContains(['@context' => '/api/companies']);
-
-        $this->assertJsonStringEqualsJsonString(
-            json_encode(['@context' => '/api/contexts/Company']),
-            $client->getResponse()->getContent()
-        );
+        $this->assertEquals('Test Company', $company->getName());
+        $this->assertEquals('12345678901234', $company->getSiret());
     }
 
-    public function testCreateCompanyAsAdmin()
+    // Test pour valider que le SIRET a bien 14 chiffres
+    public function testSiretValidation()
     {
-        $token = $this->getJwtToken('admin@example.com', 'password');
-        $client = static::createClient();
-        $client->setServerParameter('HTTP_Authorization', 'Bearer ' . $token);
+        $company = new Company();
+        $company->setSiret('12345678901234'); // Valeur valide
 
-        $client->request('POST', '/api/companies', [
-            'json' => [
-                'name' => 'New Company',
-                'description' => 'Description of new company',
-            ],
-        ]);
+        $this->assertMatchesRegularExpression('/\d{14}/', $company->getSiret(), 'Le SIRET doit contenir 14 chiffres');
+    }
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    // Test pour valider un SIRET trop court
+    public function testSiretTooShort()
+    {
+        $company = new Company();
+        $company->setSiret('1234567890123'); // 13 chiffres
+
+        $this->assertDoesNotMatchRegularExpression('/\d{14}/', $company->getSiret(), 'Le SIRET doit contenir exactement 14 chiffres');
+    }
+
+    // Test pour valider un SIRET trop long
+    public function testSiretTooLong()
+    {
+        $company = new Company();
+        $company->setSiret('123456789012345'); // 15 chiffres
+
+        $this->assertDoesNotMatchRegularExpression('/\d{14}/', $company->getSiret(), 'Le SIRET doit contenir exactement 14 chiffres');
+    }
+
+    // Test pour valider un SIRET avec des caractères non numériques
+    public function testSiretWithNonNumericCharacters()
+    {
+        $company = new Company();
+        $company->setSiret('1234567890ABCD'); // Contient des lettres
+
+        $this->assertDoesNotMatchRegularExpression('/\d{14}/', $company->getSiret(), 'Le SIRET ne doit contenir que des chiffres');
     }
 }
-

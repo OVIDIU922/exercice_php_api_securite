@@ -35,10 +35,25 @@ security:
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
+    
+    # Définition des hiérarchies de rôles pour un contrôle d'accès plus flexible
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_MANAGER, ROLE_CONSULTANT, ROLE_USER]
+        ROLE_MANAGER: [ROLE_CONSULTANT, ROLE_USER]
+        ROLE_CONSULTANT: [ROLE_USER]
+
     access_control:
-         - { path: ^/admin, roles: ROLE_ADMIN }
-         - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
+        #- { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        # Les admins peuvent tout voir et tout faire
+         - { path: ^/admin, roles: ROLE_ADMIN }
+        # Les managers peuvent gérer les projets et les entreprises
+         - { path: ^/company, roles: ROLE_MANAGER }
+         - { path: ^/project, roles: ROLE_MANAGER }
+        # Les consultants peuvent seulement consulter les projets et les entreprises
+         - { path: ^/consult, roles: ROLE_CONSULTANT }
+        # Les utilisateurs authentifiés peuvent accéder à tout sauf les pages spécifiées pour les rôles spécifiques
+         - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

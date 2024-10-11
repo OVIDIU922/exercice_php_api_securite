@@ -1,16 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier le projet{% endblock %}
+{% block title %}Éditer le projet{% endblock %}
 
 {% block body %}
-    <h1>Modifier le projet</h1>
+    <h1>Modifier le projet {{ project.title }}</h1>
 
     {{ form_start(form) }}
-        {{ form_widget(form) }}
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        {{ form_row(form.title) }}
+        {{ form_row(form.description) }}
+        
+        <button type="submit">Mettre à jour</button>
     {{ form_end(form) }}
-
-    <a href="{{ path('project_index') }}" class="btn btn-secondary mt-3">Annuler</a>
-
-    {{ include('project/_delete_form.html.twig') }}
 {% endblock %}
