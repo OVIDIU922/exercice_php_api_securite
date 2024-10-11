@@ -2,9 +2,12 @@
 
 namespace App\Entity;
 
+use App\Entity\User;
+use App\Entity\Company;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRoleRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRoleRepository::class)]
 #[ApiResource]
@@ -22,6 +25,7 @@ class UserRole
     private ?Company $company = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le rôle ne peut pas être vide.')]
     private ?string $role = null;
 
     public function getId(): ?int

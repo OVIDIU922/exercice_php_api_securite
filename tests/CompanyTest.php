@@ -1,54 +1,43 @@
-<?php
+<?php 
 
+// tests/CompanyTest.php
 namespace App\Tests;
 
-use App\Entity\Company;
-use App\Entity\Project;
-use App\Entity\UserRole;
-use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
-class CompanyTest extends TestCase
+class CompanyTest extends BaseTest
 {
-    public function testCompanyCreation(): void
+    public function testGetCompaniesAsConsultant()
     {
-        $company = new Company();
-        $company->setName('Test Company');
-        $company->setSiret('12345678901234');
-        $company->setAddress('123 Rue de Test');
+        $token = $this->getJwtToken('consultant@example.com', 'password'); // Remplacez par le bon email et mot de passe
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', 'Bearer ' . $token);
+        $client->request('GET', '/api/companies');
 
-        $this->assertEquals('Test Company', $company->getName());
-        $this->assertEquals('12345678901234', $company->getSiret());
-        $this->assertEquals('123 Rue de Test', $company->getAddress());
+        $this->assertResponseIsSuccessful();
+        //$this->assertJsonContains(['@context' => '/api/companies']);
+
+        $this->assertJsonStringEqualsJsonString(
+            json_encode(['@context' => '/api/contexts/Company']),
+            $client->getResponse()->getContent()
+        );
     }
 
-    public function testAddAndRemoveProject(): void
+    public function testCreateCompanyAsAdmin()
     {
-        $company = new Company();
-        $project = new Project();
-        $project->setTitle('Project 1');
-        $project->setDescription('Description 1');
+        $token = $this->getJwtToken('admin@example.com', 'password');
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', 'Bearer ' . $token);
 
-        $company->addProject($project);
-        $this->assertCount(1, $company->getProjects());
-        $this->assertTrue($company->getProjects()->contains($project));
+        $client->request('POST', '/api/companies', [
+            'json' => [
+                'name' => 'New Company',
+                'description' => 'Description of new company',
+            ],
+        ]);
 
-        $company->removeProject($project);
-        $this->assertCount(0, $company->getProjects());
-        $this->assertFalse($company->getProjects()->contains($project));
-    }
-
-    public function testAddAndRemoveUserRole(): void
-    {
-        $company = new Company();
-        $userRole = new UserRole();
-        $userRole->setRole('manager');
-
-        $company->addUserRole($userRole);
-        $this->assertCount(1, $company->getUserRoles());
-        $this->assertTrue($company->getUserRoles()->contains($userRole));
-
-        $company->removeUserRole($userRole);
-        $this->assertCount(0, $company->getUserRoles());
-        $this->assertFalse($company->getUserRoles()->contains($userRole));
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
     }
 }
+

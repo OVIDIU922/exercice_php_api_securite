@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Rôles de l'Utilisateur{% endblock %}
+
+{% block body %}
+    <h1>Gestion des Rôles de l'Utilisateur : {{ user.email }}</h1>
+
+    <h2>Rôles Actuels</h2>
+    <ul>
+        {% for role in roles %}
+            <li>
+                {{ role.role }}  {# Assurez-vous d'accéder à la propriété de rôle correctement #}
+                <form action="{{ path('user_remove_role', { id: user.id, roleId: role.id }) }}" method="post" style="display: inline;">
+                    <input type="submit" value="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce rôle ?');">
+                </form>
+            </li>
+        {% else %}
+            <li>Aucun rôle attribué.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Ajouter un Nouveau Rôle</h2>
+    <form action="{{ path('user_add_role', { id: user.id }) }}" method="post">
+        <select name="role" required>
+            <option value="">Sélectionnez un rôle</option>
+            <option value="ROLE_ADMIN">Administrateur</option>
+            <option value="ROLE_MANAGER">Manager</option>
+            <option value="ROLE_CONSULTANT">Consultant</option>
+        </select>
+        <input type="submit" value="Ajouter Rôle">
+    </form>
+
+    {% if app.session.flashBag.has('success') %}
+        <div class="alert alert-success">
+            {% for message in app.session.flashBag.get('success') %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if app.session.flashBag.has('error') %}
+        <div class="alert alert-danger">
+            {% for message in app.session.flashBag.get('error') %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

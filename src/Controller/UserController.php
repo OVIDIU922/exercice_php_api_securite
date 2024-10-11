@@ -13,22 +13,23 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-
 class UserController extends AbstractController
 {
+    private UserRepository $userRepository;
+    private EntityManagerInterface $entityManager;
+    private UserRoleRepository $userRoleRepository;
 
-    private $userRepository;
-    private $entityManager;
-    private $userRoleRepository;
-
-    public function __construct(UserRepository $userRepository, UserRoleRepository $userRoleRepository, EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        UserRepository $userRepository,
+        UserRoleRepository $userRoleRepository,
+        EntityManagerInterface $entityManager
+    ) {
         $this->userRepository = $userRepository;
         $this->userRoleRepository = $userRoleRepository;
         $this->entityManager = $entityManager;
     }
 
-    #[Route('/{id}/roles', name: 'user_roles', methods: ['GET'])]
+    #[Route('/user/{id}/roles', name: 'user_view_roles', methods: ['GET'])]
     public function viewUserRoles(int $id): Response
     {
         $user = $this->userRepository->find($id);
@@ -36,15 +37,13 @@ class UserController extends AbstractController
             return $this->json(['message' => 'Utilisateur non trouvé'], 404);
         }
 
-        $roles = $user->getUserRoles()->map(fn(UserRole $userRole) => $userRole->getRole());
-
-        return $this->json([
-            'user' => $user->getEmail(),
-            'roles' => $roles->toArray()
+        return $this->render('user_roles.html.twig', [
+            'user' => $user,
+            'roles' => $user->getUserRoles()
         ]);
     }
 
-    #[Route('/{id}/roles', name: 'user_add_role', methods: ['POST'])]
+    #[Route('/user/{id}/roles', name: 'user_add_role', methods: ['POST'])]
     public function addRole(Request $request, int $id): Response
     {
         $user = $this->userRepository->find($id);
@@ -56,19 +55,30 @@ class UserController extends AbstractController
         $role = $data['role'] ?? null;
 
         if (!in_array($role, ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_CONSULTANT'])) {
-            return $this->json(['message' => 'Rôle invalide'], 400);
+            return $this->json(['message' => 'Rôle invalide'], 422);
+        }
+
+        // Check if the role already exists for the user
+        if ($user->getUserRoles()->exists(fn($key, UserRole $userRole) => $userRole->getRole() === $role)) {
+            return $this->json(['message' => 'Ce rôle est déjà attribué à cet utilisateur'], 409);
         }
 
         $userRole = new UserRole();
         $userRole->setRole($role);
         $userRole->setUser($user);
-        $this->entityManager->persist($userRole);
-        $this->entityManager->flush();
-
-        return $this->json(['message' => 'Rôle ajouté avec succès']);
+        
+        try {
+            $this->entityManager->persist($userRole);
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Rôle ajouté avec succès');
+            return $this->redirectToRoute('user_view_roles', ['id' => $user->getId()]);
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de l\'ajout du rôle');
+            return $this->redirectToRoute('user_view_roles', ['id' => $user->getId()]);
+        }
     }
 
-    #[Route('/{id}/roles/{roleId}', name: 'user_remove_role', methods: ['DELETE'])]
+    #[Route('/user/{id}/roles/{roleId}', name: 'user_remove_role', methods: ['DELETE'])]
     public function removeRole(int $id, int $roleId): Response
     {
         $userRole = $this->userRoleRepository->find($roleId);
@@ -76,9 +86,14 @@ class UserController extends AbstractController
             return $this->json(['message' => 'Rôle non trouvé'], 404);
         }
 
-        $this->entityManager->remove($userRole);
-        $this->entityManager->flush();
-
-        return $this->json(['message' => 'Rôle supprimé avec succès']);
+        try {
+            $this->entityManager->remove($userRole);
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Rôle supprimé avec succès');
+            return $this->redirectToRoute('user_view_roles', ['id' => $id]);
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de la suppression du rôle');
+            return $this->redirectToRoute('user_view_roles', ['id' => $id]);
+        }
     }
 }
