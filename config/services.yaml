@@ -24,3 +24,16 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    # Explicitly define CompanyVoter service to resolve autowiring issue
+    App\Security\Voter\CompanyVoter:
+        arguments:
+            $security: '@security.helper'
+
+    # Explicitly define ProjectVoter service
+    App\Security\Voter\ProjectVoter:
+        arguments:
+            $security: '@security.helper'
+
+
+    
+    

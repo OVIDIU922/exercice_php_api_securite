@@ -1,170 +1,136 @@
-<?php 
+<?php
 
 namespace App\Tests;
 
-use App\Entity\User;
-use App\Entity\Company;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class CompanyAccessTest extends WebTestCase
 {
-    private $entityManager;
-    private $client;
-
-    /*protected function setUp(): void
+    private function getJwtToken($client, $email, $password)
     {
-        parent::setUp();
+        $client->request('POST', '/api/auth', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+            'email' => $email,
+            'password' => $password,
+        ]));
+        $data = json_decode($client->getResponse()->getContent(), true);
+        return $data['token'];
+    }
 
-        // Créer le client
-        $this->client = static::createClient();
-
-        // Récupérer l'EntityManager
-        $this->entityManager = $this->client->getContainer()->get('doctrine')->getManager();
-    }*/
-    
-    protected function setUp(): void
+    private function assertJsonStructure(array $expectedStructure, array $actualData)
     {
-        parent::setUp();
-
-        // Créer le client une seule fois pour tous les tests
-        if ($this->client === null) {
-            $this->client = static::createClient();
+        foreach ($expectedStructure as $key => $value) {
+            $this->assertArrayHasKey($key, $actualData);
+            if (is_array($value) && is_array($actualData[$key])) {
+                $this->assertJsonStructure($value, $actualData[$key]);
+            }
         }
-
-        // Récupérer l'EntityManager
-        $this->entityManager = $this->client->getContainer()->get('doctrine')->getManager();
     }
 
-   /* protected function tearDown(): void
+    public function testAdminCanAddUserToCompany()
     {
-        // Nettoyer les utilisateurs et les entreprises créés lors des tests
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Company c')->execute();
-        
-        // Réinitialiser les gestionnaires d'exceptions
-        restore_error_handler();
-        restore_exception_handler();
-        
-        parent::tearDown();
-    }*/
-
-    protected function tearDown(): void
-    {
-        // Nettoyer les utilisateurs et les entreprises créés lors des tests
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Company c')->execute();
-        
-        // Réinitialiser les gestionnaires d'exceptions
-        restore_error_handler();
-        restore_exception_handler();
-        
-        parent::tearDown(); // Assurez-vous d'appeler la méthode parent
-    }
-
-    public function testAdminCanGetCompanies(): void
-    {
-        // Créer un utilisateur (admin) avec un email unique
-        $adminUser = new User();
-        $adminUser->setEmail('admin_' . uniqid() . '@example.com');
-        $adminUser->setPassword('secure_password'); // Définir un mot de passe
-        $adminUser->setRoles(['ROLE_ADMIN']);
-
-        // Persister l'utilisateur dans la base de données
-        $this->entityManager->persist($adminUser);
-        $this->entityManager->flush();
-
-        // Créer une entreprise avec des données valides
-        $company = new Company();
-        $company->setName('Test Company');
-        $company->setSiret('12345678901234'); // SIRET valide
-        $company->setAddress('123 Main St'); // Adresse non nulle
-        $this->entityManager->persist($company);
-        $this->entityManager->flush();
-
-        // Simuler une requête pour obtenir les entreprises en tant qu'admin
-        $this->client->loginUser($adminUser); // Connecter l'utilisateur admin
-
-        $this->client->request('GET', '/api/companies');
-        $this->assertResponseIsSuccessful(); // Vérifier que la réponse est réussie
-
-        // Décoder la réponse JSON
-        $responseContent = $this->client->getResponse()->getContent();
-        $responseData = json_decode($responseContent, true);
-
-        // Vérifier que l'entreprise est dans la réponse
-        $this->assertCount(1, $responseData['hydra:member']); // Vérifier le nombre d'entreprises
-        $this->assertEquals('Test Company', $responseData['hydra:member'][0]['name']);
-        $this->assertEquals('12345678901234', $responseData['hydra:member'][0]['siret']);
-        $this->assertEquals('123 Main St', $responseData['hydra:member'][0]['address']);
-    }
-
-}
-
-
-  
-
-
-/*namespace App\Tests;
-
-use App\Entity\User;
-use App\Entity\Company;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
-class CompanyAccessTest extends WebTestCase
-{
-    private $entityManager;
-
-    protected function setUp(): void
-    {
-        // Booter le kernel pour initialiser le conteneur
-        self::bootKernel();
-        
-        // Récupérer l'EntityManager à partir du conteneur de services
-        $this->entityManager = self::getContainer()->get('doctrine')->getManager();
-    }
-
-    public function tearDown(): void
-    {
-        // Nettoyer les utilisateurs et les entreprises créés lors des tests
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Company c')->execute();
-    }
-
-    public function testAdminCanGetCompanies(): void
-    {
-        // Créer un utilisateur (admin) avec un mot de passe et un email unique
-        $adminUser = new User();
-        $adminUser->setEmail('admin_' . uniqid() . '@example.com');
-        $adminUser->setPassword('secure_password'); // Définir un mot de passe non nul
-        $adminUser->setRoles(['ROLE_ADMIN']);
-
-        // Persister l'utilisateur dans la base de données
-        $this->entityManager->persist($adminUser);
-        $this->entityManager->flush();
-
-        // Créer une entreprise avec un SIRET valide
-        $company = new Company();
-        $company->setName('Test Company');
-        $company->setSiret('12345678901234'); // Assurez-vous de définir un SIRET valide
-        $company->setAddress('123 Main St'); // Définir une adresse non nulle
-        $this->entityManager->persist($company);
-        $this->entityManager->flush();
-
-        // Simuler une requête pour obtenir les entreprises en tant qu'admin
         $client = static::createClient();
-        $client->loginUser($adminUser); // Connecter l'utilisateur admin
-
-        $client->request('GET', '/api/companies');
-        $this->assertResponseIsSuccessful(); // Vérifier que la réponse est réussie
-
-        // Vérifier que l'entreprise est dans la réponse
-        $this->assertJsonStringEqualsJsonString(
-            json_encode(['name' => 'Test Company']),
-            $client->getResponse()->getContent()
-        );
+        $token = $this->getJwtToken($client, 'admin@example.com', 'admin123');
+        $client->request('POST', '/api/companies/1/add_user', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'email' => 'newuser@local.host',
+            'role' => 'manager'
+        ]));
+        $this->assertResponseStatusCodeSame(201);
     }
-}*/
+
+    public function testConsultantCannotAddUser()
+    {
+        $client = static::createClient();
+        $token = $this->getJwtToken($client, 'consultant@example.com', 'consultant123');
+        $client->request('POST', '/api/companies/1/add_user', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'email' => 'newuser@local.host',
+            'role' => 'manager'
+        ]));
+        $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testUserCanFetchCompanies()
+    {
+        $client = static::createClient();
+        $token = $this->getJwtToken($client, 'manager@example.com', 'manager123');
+        $client->request('GET', '/api/companies', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ]);
+        $this->assertResponseStatusCodeSame(200);
+
+        $responseContent = json_decode($client->getResponse()->getContent(), true);
+        $expectedStructure = [
+            'data' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'siret',
+                    'address',
+                ],
+            ],
+        ];
+        $this->assertJsonStructure($expectedStructure, $responseContent);
+    }
+
+    public function testConsultantCanFetchProjects()
+    {
+        $client = static::createClient();
+        $token = $this->getJwtToken($client, 'consultant@example.com', 'consultant123');
+        $client->request('GET', '/api/companies/1/projects', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ]);
+        $this->assertResponseStatusCodeSame(200);
+    }
+
+    public function testUnauthorizedUserCannotAccessCompanies()
+    {
+        $client = static::createClient();
+        $client->request('GET', '/api/companies');
+        $this->assertResponseStatusCodeSame(401); // Vérifie que l'accès est refusé
+    }
+
+    public function testManagerCanCreateProject()
+    {
+        $client = static::createClient();
+        $token = $this->getJwtToken($client, 'manager@example.com', 'manager123');
+
+        $client->request('POST', '/api/companies/1/projects', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'title' => 'New Project',
+            'description' => 'Project description'
+        ]));
+
+        // Vérifie que la réponse est 201 Created
+        $this->assertResponseStatusCodeSame(201);
+        
+        // Affiche le contenu de la réponse si une erreur se produit
+        if ($client->getResponse()->getStatusCode() !== 201) {
+            echo $client->getResponse()->getContent();
+        }
+    }
 
 
 
-
+    public function testConsultantCannotCreateProject()
+    {
+        $client = static::createClient();
+        $token = $this->getJwtToken($client, 'consultant@example.com', 'consultant123');
+        $client->request('POST', '/api/companies/1/projects', [], [], [
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'title' => 'Unauthorized Project',
+            'description' => 'This should not be allowed'
+        ]));
+        $this->assertResponseStatusCodeSame(403);
+    }
+}

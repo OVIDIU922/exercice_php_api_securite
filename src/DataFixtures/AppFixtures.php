@@ -9,6 +9,9 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
+use App\Factory\UserFactory;
+
+
 
 class AppFixtures extends Fixture
 {
@@ -25,6 +28,11 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager)
     {
+
+        UserFactory::createOne(['email' => 'user1@local.host']);
+        UserFactory::createOne(['email' => 'user2@local.host']);
+
+        UserFactory::createMany(10);
         // Créer des utilisateurs spécifiques pour les tests
         $admin = new User();
         $admin->setEmail('admin@example.com');
@@ -76,7 +84,8 @@ class AppFixtures extends Fixture
             $project->setCompany($company);
             $manager->persist($project);
         }
-
+    
+            
         // Exécuter la persistance
         $manager->flush();
     }
